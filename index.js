@@ -7,20 +7,36 @@ const wss = new WebSocket.Server({server});
 let client = [];
 let nameClient = [];
 wss.on('connection', function connection(ws) {
+  //khi player joined
+  //{"type": "joined","name" :"${this.nameLabel.string}", "isShared":"true"}
     client.push(ws);
-    // ws.on('message', function message(data) {
-    //   try{
-    //     let msg = JSON.parse(data)
-    //   }catch{
-
-    //   }
-    // });
     ws.on('message', function message(data, isBinary) {
-        wss.clients.forEach(function each(client) {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(data, { binary: isBinary });
+        try{
+          data = JSON.parse(data);
+          if(data.type=="joined"){
+            nameClient.push(data.name);
           }
-        });
+          if(data.isShared){
+            wss.clients.forEach(function each(client) {
+              if (client.readyState === WebSocket.OPEN) {
+                let message = ""
+                if(data.type=="joined"){
+                  message = `${data.name} joined`
+                }else if(data.type=="position"){
+                  console.log("kkkkkk")
+                  message = JSON.stringify(data)
+                }
+                client.send(message, { binary: isBinary });
+              }
+            });
+          }
+        }catch{
+          wss.clients.forEach(function each(client) {
+            if (client.readyState === WebSocket.OPEN) {
+              client.send("llllmmm")
+            }
+          })
+        }
     });
 
     ws.on('close', () =>{
@@ -32,6 +48,7 @@ wss.on('connection', function connection(ws) {
       });
        client.splice(index,1)
        nameClient.splice(index, 1)
+       console.log(nameClient)
     });
   
   });
